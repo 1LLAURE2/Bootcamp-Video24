@@ -1,13 +1,19 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {motion}  from "framer-motion";
-
+import { addTask, getTask, toggleComplete } from '../firebase/TaskController';
 
 export const Video17 = ({showSettings,setShowSettings}) =>{
     const [tasklist,setTaskList]=React.useState([]);
     const [newtask,setNewTask]=React.useState("");
     
-    
+    useEffect(()=>{
+        getTask()
+            .then((tasks)=>{
+                setTaskList([...tasks]);
+            })
+            .catch((e)=>console.log(e));
+    },[]);
     /**
      * Esta funcion cambia el estado newTask a traves del input
      * 
@@ -23,8 +29,21 @@ export const Video17 = ({showSettings,setShowSettings}) =>{
     const addNewTask=()=>{
         // setTaskList([...tasklist,newtask])
         if(newtask==="") return;
-        setTaskList([...tasklist,{task:newtask,completed:false}])
-        setNewTask("");
+        const task={task:newtask, completed:false};
+        //añadir una nueva tarea a la BD
+        // console.log("===>",task);
+        addTask(task)
+            .then(()=>{
+                //Cuando se añada se mostrar dentro del estado
+                return setTaskList([...tasklist,task]);
+            })
+            .catch(e=>console.log(e))
+            .finally(()=> setNewTask(""));
+
+        
+        // setTaskList([...tasklist,{task:newtask,completed:false}])
+        // setNewTask("");
+
     }
 
     /**
@@ -58,11 +77,23 @@ export const Video17 = ({showSettings,setShowSettings}) =>{
      * @param {*} index 
      */
     const toggleCompleteItem=(index)=>{
-        const newTaskList=tasklist;
-        console.log(newTaskList[index].completed)
-        newTaskList[index].completed=!newTaskList[index].completed;
-        console.log(newTaskList[index].completed)
-        setTaskList([...newTaskList]);
+        const task=tasklist.find(t=>t.id===index);
+
+        toggleComplete(task).then(async()=>{
+            const newTaskList=await getTask();
+            return setTaskList([
+                ...newTaskList,
+            ])
+            // return setTaskList([...tasklist,{...task,completed:!task.completed}]);
+        })
+        .catch(err => console.log(err));
+
+
+        // const newTaskList=tasklist;
+        // console.log(newTaskList[index].completed)
+        // newTaskList[index].completed=!newTaskList[index].completed;
+        // console.log(newTaskList[index].completed)
+        // setTaskList([...newTaskList]);
     }
     /**
      * Añade una nueva tarea cuando se presiona Enter
@@ -111,12 +142,12 @@ export const Video17 = ({showSettings,setShowSettings}) =>{
                                 animate={{x:0}}
                                 key={i}
                             > 
-                                <label>
+                                <label className='cursor-pointer'>
                                     <input
                                         type='checkbox'
                                         // onClick={()=>removeItem(i)}
                                         // checked={false}
-                                        onClick={()=>toggleCompleteItem(i)}
+                                        onClick={()=>toggleCompleteItem(t.id)}
                                         checked={t.completed}
                                         onChange={()=>{}}
                                     />
