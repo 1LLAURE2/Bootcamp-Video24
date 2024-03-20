@@ -72,7 +72,7 @@ export const Video17 = ({showSettings,setShowSettings}) =>{
     }
 
     /**
-     * 
+     * 🔥 
      * Cambia el item por completado<->pendiente
      * @param {*} index 
      */
